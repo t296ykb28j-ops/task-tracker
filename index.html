@@ -22,20 +22,23 @@
   --ink:#EEF0F8; --dim:#8B94BB; --faint:#5A6390;
   --dawn:#FFC466; --dawn-ink:#241A05;
   --work:#3A4266;
-  --rail:2px;
   --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
   --disp:'Bricolage Grotesque',system-ui,sans-serif;
   --body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
+html,body{height:100%;margin:0;padding:0}
 body{
   background:var(--bg); color:var(--ink); font-family:var(--body);
-  font-size:15px; line-height:1.45; min-height:100dvh;
-  padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  font-size:15px; line-height:1.45;
+  display:flex; flex-direction:column; overflow:hidden;   /* app shell: only #scroller scrolls */
 }
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input,select{font:inherit}
+
+/* ---------- app shell ---------- */
+#scroller{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+main{padding:0 18px 28px}
 
 /* ---------- header ---------- */
 header{
@@ -49,18 +52,17 @@ h1{font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:-.02em;
 #dayChips{display:flex;gap:6px;padding:8px 14px 12px;overflow-x:auto;scrollbar-width:none}
 #dayChips::-webkit-scrollbar{display:none}
 .chip{
-  flex:1;min-width:42px;padding:8px 0 7px;border-radius:12px;text-align:center;
+  flex:1;min-width:44px;padding:10px 0 9px;border-radius:12px;text-align:center;
   background:var(--surface);border:1px solid transparent;color:var(--dim);
 }
-.chip .dow{font-size:10px;text-transform:uppercase;letter-spacing:.08em}
-.chip .dnum{font-family:var(--disp);font-weight:700;font-size:16px;color:var(--ink);margin:1px 0 5px}
-.chip .load{height:3px;border-radius:2px;background:var(--line);margin:0 9px;overflow:hidden}
+.chip .dow{display:block;font-size:10px;line-height:1;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.chip .dnum{display:block;font-family:var(--disp);font-weight:700;font-size:16px;line-height:1;color:var(--ink);margin-bottom:8px}
+.chip .load{display:block;height:3px;border-radius:2px;background:var(--line);margin:0 9px;overflow:hidden}
 .chip .load i{display:block;height:100%;background:var(--dawn);border-radius:2px}
 .chip.sel{border-color:var(--dawn);background:var(--raise)}
 .chip.today .dow{color:var(--dawn)}
 
 /* ---------- views ---------- */
-main{padding:0 18px}
 .view{display:none}
 .view.on{display:block}
 .banner{
@@ -72,7 +74,7 @@ main{padding:0 18px}
 /* ---------- day rail timeline ---------- */
 #timeline{position:relative;padding-left:70px;margin-top:4px}
 #timeline::before{
-  content:"";position:absolute;left:58px;top:10px;bottom:10px;width:var(--rail);
+  content:"";position:absolute;left:58px;top:10px;bottom:10px;width:2px;
   background:linear-gradient(var(--dawn),var(--faint) 30%,var(--faint) 70%,#9FB4FF);
   border-radius:2px;opacity:.55;
 }
@@ -127,9 +129,33 @@ main{padding:0 18px}
 .goal-card .g-meta{font-family:var(--mono);font-size:11px;color:var(--dim);margin:2px 0 7px}
 .goal-card .g-track{height:4px;border-radius:3px;background:var(--line);overflow:hidden}
 .goal-card .g-track i{display:block;height:100%;background:var(--c);border-radius:3px}
+.goal-card .g-streak{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:7px}
+.goal-card .g-streak b{color:var(--dawn);font-weight:500}
 .goal-card .g-pct{font-family:var(--mono);font-size:11px;color:var(--dim);flex:none}
 
-/* ---------- setup ---------- */
+/* ---------- rewards ---------- */
+.reward-card{
+  display:block;width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;margin-bottom:10px;
+}
+.reward-card .r-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.reward-card .r-name{font-weight:600;font-size:14px}
+.reward-card .r-count{font-family:var(--mono);font-size:11px;color:var(--dim);flex:none}
+.r-goals{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px}
+.r-goals span{
+  font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:99px;
+  color:var(--c);border:1px solid color-mix(in srgb,var(--c) 45%,transparent);
+  background:color-mix(in srgb,var(--c) 12%,transparent);
+}
+.r-track{height:4px;border-radius:3px;background:var(--line);overflow:hidden}
+.r-track i{display:block;height:100%;background:var(--dawn);border-radius:3px}
+.r-caption{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:7px}
+.reward-card.won{border-color:color-mix(in srgb,var(--dawn) 55%,transparent)}
+.reward-card.won .r-name::before{content:"🏆 "}
+.reward-card.won .r-caption{color:var(--dawn)}
+
+/* ---------- setup / forms ---------- */
 .field{margin-bottom:16px}
 .field label{display:block;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px}
 .field input[type=time],.field input[type=text],.field input[type=number],.field select{
@@ -137,6 +163,7 @@ main{padding:0 18px}
   background:var(--surface);color:var(--ink);font-family:var(--mono);font-size:15px;
   appearance:none;-webkit-appearance:none;
 }
+.field input:disabled,.field select:disabled{opacity:.5}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .row3{display:grid;grid-template-columns:1.1fr .9fr 1fr;gap:8px}
 .daytoggles{display:flex;gap:6px}
@@ -145,32 +172,36 @@ main{padding:0 18px}
   border:1px solid var(--line);color:var(--dim);font-family:var(--mono);font-size:12px;
 }
 .daytoggles button.on{background:var(--dawn);border-color:var(--dawn);color:var(--dawn-ink);font-weight:600}
+.gpicks{display:flex;gap:7px;flex-wrap:wrap}
+.gpicks button{
+  padding:8px 13px;border-radius:99px;font-size:13px;
+  background:var(--surface);border:1px solid var(--line);color:var(--dim);
+}
+.gpicks button.on{background:var(--c);border-color:var(--c);color:#101425;font-weight:600}
 .hint{font-size:12px;color:var(--faint);margin-top:6px}
 h2{font-family:var(--disp);font-weight:700;font-size:16px;margin:18px 0 12px}
 
-/* ---------- bottom nav ---------- */
+/* ---------- bottom nav (normal flow, always at the bottom of the shell) ---------- */
 nav{
-  position:fixed;left:0;right:0;bottom:0;display:flex;
-  background:color-mix(in srgb,var(--bg) 88%,transparent);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  flex:none;display:flex;background:var(--bg);
   border-top:1px solid var(--line);
-  padding:6px 10px calc(6px + env(safe-area-inset-bottom));
+  padding:6px 8px calc(8px + env(safe-area-inset-bottom));
 }
 nav button{flex:1;padding:9px 0 7px;color:var(--faint);font-size:11px;border-radius:12px}
 nav button .ic{display:block;font-size:18px;line-height:1;margin-bottom:3px}
 nav button.on{color:var(--dawn)}
 
-/* ---------- sheet ---------- */
-#sheetWrap{position:fixed;inset:0;background:rgba(6,8,18,.6);display:none;z-index:30}
-#sheetWrap.on{display:block}
-#sheet{
+/* ---------- sheets ---------- */
+.sheetWrap{position:fixed;inset:0;background:rgba(6,8,18,.6);display:none;z-index:30}
+.sheetWrap.on{display:block}
+.sheet{
   position:absolute;left:0;right:0;bottom:0;background:var(--raise);
   border-radius:20px 20px 0 0;padding:18px 18px calc(20px + env(safe-area-inset-bottom));
   max-height:88dvh;overflow-y:auto;
   animation:up .22s ease;
 }
 @keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
-#sheet h2{margin-top:2px}
+.sheet h2{margin-top:2px}
 .swatches{display:flex;gap:8px;flex-wrap:wrap}
 .swatches button{width:32px;height:32px;border-radius:10px;background:var(--c);border:2px solid transparent}
 .swatches button.on{border-color:var(--ink)}
@@ -179,10 +210,10 @@ nav button.on{color:var(--dawn)}
 .danger{color:#FF8A80;text-align:center;width:100%;padding:12px;font-size:13px}
 
 #toast{
-  position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);
+  position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);
   background:var(--raise);border:1px solid var(--line);color:var(--ink);
   padding:9px 16px;border-radius:99px;font-size:13px;opacity:0;pointer-events:none;
-  transition:opacity .2s ease,transform .2s ease;z-index:40;white-space:nowrap;
+  transition:opacity .2s ease,transform .2s ease;z-index:40;white-space:nowrap;max-width:88vw;overflow:hidden;text-overflow:ellipsis;
 }
 #toast.on{opacity:1;transform:translateX(-50%)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -191,65 +222,75 @@ nav button.on{color:var(--dawn)}
 </head>
 <body>
 
-<header>
-  <h1>Life Tracker</h1>
-  <span id="weekLabel"></span>
-</header>
+<div id="scroller">
+  <header>
+    <h1>Life Tracker</h1>
+    <span id="weekLabel"></span>
+  </header>
 
-<div id="dayChips"></div>
+  <div id="dayChips"></div>
 
-<main>
-  <!-- TODAY / SCHEDULE -->
-  <section id="view-today" class="view on">
-    <div id="unmetBanner" class="banner" style="display:none"></div>
-    <div id="timeline"></div>
-    <div id="daySummary"></div>
-    <button class="cta" id="btnGenerate">Generate this week</button>
-  </section>
+  <main>
+    <!-- SCHEDULE -->
+    <section id="view-today" class="view on">
+      <div id="staleBanner" class="banner" style="display:none"></div>
+      <div id="unmetBanner" class="banner" style="display:none"></div>
+      <div id="timeline"></div>
+      <div id="daySummary"></div>
+      <button class="cta" id="btnGenerate">Generate this week</button>
+    </section>
 
-  <!-- GOALS -->
-  <section id="view-goals" class="view">
-    <div id="goalList"></div>
-    <button class="cta ghost" id="btnAddGoal">+ New goal</button>
-  </section>
+    <!-- GOALS -->
+    <section id="view-goals" class="view">
+      <div id="goalList"></div>
+      <button class="cta ghost" id="btnAddGoal">+ New goal</button>
+    </section>
 
-  <!-- SETUP -->
-  <section id="view-setup" class="view">
-    <h2>Your day</h2>
-    <div class="row2">
-      <div class="field"><label for="setWake">Wake up</label><input type="time" id="setWake"></div>
-      <div class="field"><label for="setSleep">Sleep</label><input type="time" id="setSleep"></div>
-    </div>
-    <h2>Work</h2>
-    <div class="row2">
-      <div class="field"><label for="setWorkStart">Starts</label><input type="time" id="setWorkStart"></div>
-      <div class="field"><label for="setWorkEnd">Ends</label><input type="time" id="setWorkEnd"></div>
-    </div>
-    <div class="field">
-      <label>Work days</label>
-      <div class="daytoggles" id="workDayToggles"></div>
-    </div>
-    <h2>Scheduling</h2>
-    <div class="field">
-      <label for="setBuffer">Break between sessions</label>
-      <select id="setBuffer">
-        <option value="0">None</option><option value="10">10 min</option>
-        <option value="15">15 min</option><option value="30">30 min</option>
-      </select>
-      <p class="hint">Changes apply the next time you generate the week.</p>
-    </div>
-  </section>
-</main>
+    <!-- REWARDS -->
+    <section id="view-rewards" class="view">
+      <div id="rewardList"></div>
+      <button class="cta ghost" id="btnAddReward">+ New reward</button>
+    </section>
+
+    <!-- SETUP -->
+    <section id="view-setup" class="view">
+      <h2>Your day</h2>
+      <div class="row2">
+        <div class="field"><label for="setWake">Wake up</label><input type="time" id="setWake"></div>
+        <div class="field"><label for="setSleep">Sleep</label><input type="time" id="setSleep"></div>
+      </div>
+      <h2>Work</h2>
+      <div class="row2">
+        <div class="field"><label for="setWorkStart">Starts</label><input type="time" id="setWorkStart"></div>
+        <div class="field"><label for="setWorkEnd">Ends</label><input type="time" id="setWorkEnd"></div>
+      </div>
+      <div class="field">
+        <label>Work days</label>
+        <div class="daytoggles" id="workDayToggles"></div>
+      </div>
+      <h2>Scheduling</h2>
+      <div class="field">
+        <label for="setBuffer">Break between sessions</label>
+        <select id="setBuffer">
+          <option value="0">None</option><option value="10">10 min</option>
+          <option value="15">15 min</option><option value="30">30 min</option>
+        </select>
+        <p class="hint">Changes apply the next time you generate the week.</p>
+      </div>
+    </section>
+  </main>
+</div>
 
 <nav>
   <button data-view="today" class="on"><span class="ic">◔</span>Schedule</button>
   <button data-view="goals"><span class="ic">◎</span>Goals</button>
+  <button data-view="rewards"><span class="ic">★</span>Rewards</button>
   <button data-view="setup"><span class="ic">☼</span>Setup</button>
 </nav>
 
 <!-- GOAL SHEET -->
-<div id="sheetWrap">
-  <div id="sheet">
+<div id="sheetWrap" class="sheetWrap">
+  <div class="sheet">
     <h2 id="sheetTitle">New goal</h2>
     <div class="field"><label for="gName">Name</label><input type="text" id="gName" placeholder="e.g. Guitar" autocomplete="off"></div>
     <div class="field">
@@ -276,6 +317,33 @@ nav button.on{color:var(--dawn)}
       <button class="cta" id="btnSheetSave">Save goal</button>
     </div>
     <button class="danger" id="btnSheetDelete" style="display:none">Delete goal</button>
+  </div>
+</div>
+
+<!-- REWARD SHEET -->
+<div id="rSheetWrap" class="sheetWrap">
+  <div class="sheet">
+    <h2 id="rSheetTitle">New reward</h2>
+    <div class="field"><label for="rName">Reward</label><input type="text" id="rName" placeholder="e.g. New headphones" autocomplete="off"></div>
+    <div class="field">
+      <label>To earn it, keep a streak of</label>
+      <div class="row2">
+        <input type="number" id="rTarget" min="1" step="1" inputmode="numeric">
+        <select id="rUnit"><option value="days">days in a row</option><option value="weeks">weeks in a row</option></select>
+      </div>
+      <p class="hint">Days: hit the goal's daily amount (or, for weekly goals, do a session that day). Weeks: hit the goal's full weekly amount.</p>
+    </div>
+    <div class="field">
+      <label>On these goals</label>
+      <div class="gpicks" id="rGoalPicks"></div>
+      <p class="hint">With several goals, every one of them must hold the streak.</p>
+    </div>
+    <div class="sheet-actions">
+      <button class="cta ghost" id="btnRCancel">Cancel</button>
+      <button class="cta" id="btnRSave">Save reward</button>
+    </div>
+    <button class="cta" id="btnRNext" style="display:none">Set a follow-up reward</button>
+    <button class="danger" id="btnRDelete" style="display:none">Remove reward</button>
   </div>
 </div>
 
@@ -313,13 +381,23 @@ let settings = store.get("lt.settings", {
 });
 let goals = store.get("lt.goals", []);
 let schedule = store.get("lt.schedule", null);
+let rewards = store.get("lt.rewards", []);       // {id,name,goalIds,target,unit,achievedAt}
+let history = store.get("lt.history", {});       // { "2026-07-06": { goalId: doneMinutes } }
 
 let selDay = mondayIndex(new Date());
-let editingId = null;
+let editingId = null;                             // goal sheet
 let pickedColor = PALETTE[0];
+let editingRewardId = null;                       // reward sheet
+let rGoalSel = [];                                // reward sheet: selected goal ids
 
-/* ================= time helpers ================= */
+/* ================= time & date helpers ================= */
 function mondayIndex(d) { return (d.getDay() + 6) % 7; }
+function mondayOf(d) { const x = new Date(d); x.setDate(x.getDate() - mondayIndex(x)); return x; }
+function isoDate(dt) {
+  return dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0");
+}
+function addDays(iso, n) { const [y, m, d] = iso.split("-").map(Number); return isoDate(new Date(y, m - 1, d + n)); }
+function mondayISO(dt) { return isoDate(mondayOf(dt)); }
 function toMin(hhmm) { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; }
 function fmtClock(min) {
   let m = min % 1440; if (m < 0) m += 1440;
@@ -333,6 +411,10 @@ function fmtDur(min) {
   if (h && m) return h + "h " + m + "m";
   if (h) return h + "h";
   return m + "m";
+}
+function fmtDate(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 /* ================= scheduler (pure) ================= */
@@ -426,9 +508,85 @@ function buildSchedule(settings, goals) {
   return { days, unmet, wake, dayEnd };
 }
 
-/* ================= derived ================= */
+/* ================= follow-through history & metrics ================= */
+function recordToggle(goalId, dateISO, deltaMin) {
+  if (!history[dateISO]) history[dateISO] = {};
+  history[dateISO][goalId] = Math.max(0, (history[dateISO][goalId] || 0) + deltaMin);
+  store.set("lt.history", history);
+}
+function minutesOn(dateISO, goalId) { return (history[dateISO] || {})[goalId] || 0; }
+
 function weeklyTarget(g) { return g.per === "day" ? g.amount * 7 : g.amount; }
-function doneMinutes(g) {
+
+// Followed through on a date: daily goals need the full daily amount; weekly goals count any session.
+function metDay(g, dateISO) {
+  const m = minutesOn(dateISO, g.id);
+  return g.per === "day" ? m >= g.amount : m > 0;
+}
+function weekMinutes(g, monISO) {
+  let t = 0;
+  for (let i = 0; i < 7; i++) t += minutesOn(addDays(monISO, i), g.id);
+  return t;
+}
+function metWeek(g, monISO) { return weekMinutes(g, monISO) >= weeklyTarget(g); }
+
+// Streaks: the in-progress day/week doesn't break a streak, it just hasn't extended it yet.
+function dayStreak(g, todayISO) {
+  let key = todayISO || isoDate(new Date());
+  let s = 0;
+  if (!metDay(g, key)) key = addDays(key, -1);
+  while (metDay(g, key)) { s++; key = addDays(key, -1); }
+  return s;
+}
+function weekStreak(g, nowMonISO) {
+  let key = nowMonISO || mondayISO(new Date());
+  let s = 0;
+  if (!metWeek(g, key)) key = addDays(key, -7);
+  while (metWeek(g, key)) { s++; key = addDays(key, -7); }
+  return s;
+}
+function totalDaysMet(g) {
+  let n = 0;
+  for (const d in history) if (metDay(g, d)) n++;
+  return n;
+}
+function totalWeeksMet(g) {
+  const checked = new Set(); let n = 0;
+  for (const d in history) {
+    const [y, m, dd] = d.split("-").map(Number);
+    const mon = mondayISO(new Date(y, m - 1, dd));
+    if (checked.has(mon)) continue;
+    checked.add(mon);
+    if (metWeek(g, mon)) n++;
+  }
+  return n;
+}
+
+/* ================= rewards ================= */
+function rewardProgress(r) {
+  let min = Infinity;
+  for (const gid of r.goalIds) {
+    const g = goals.find(x => x.id === gid);
+    if (!g) continue;
+    const s = r.unit === "weeks" ? weekStreak(g) : dayStreak(g);
+    if (s < min) min = s;
+  }
+  return min === Infinity ? 0 : min;
+}
+function checkRewards() {
+  const unlocked = [];
+  for (const r of rewards) {
+    if (!r.achievedAt && r.goalIds.length && rewardProgress(r) >= r.target) {
+      r.achievedAt = Date.now();
+      unlocked.push(r);
+    }
+  }
+  if (unlocked.length) store.set("lt.rewards", rewards);
+  return unlocked;
+}
+
+/* ================= derived ================= */
+function doneMinutesThisWeek(g) {
   if (!schedule) return 0;
   let t = 0;
   for (const day of schedule.days)
@@ -441,14 +599,13 @@ function dayCapacity() {
   let end = toMin(settings.sleep); if (end <= wake) end += 1440;
   return { wake, end };
 }
+function dayDate(d) { return addDays(schedule.weekStart, d); }
 
 /* ================= rendering ================= */
 const $ = s => document.querySelector(s);
 
-function mondayOf(d) { const x = new Date(d); x.setDate(x.getDate() - mondayIndex(x)); return x; }
-
 function render() {
-  renderHeader(); renderChips(); renderTimeline(); renderGoals(); renderSetup();
+  renderHeader(); renderChips(); renderTimeline(); renderGoals(); renderRewards(); renderSetup();
 }
 
 function renderHeader() {
@@ -490,6 +647,13 @@ function workLen(d) {
 function renderTimeline() {
   const tl = $("#timeline"); tl.innerHTML = "";
   const banner = $("#unmetBanner");
+  const stale = $("#staleBanner");
+
+  // plan from a previous week?
+  if (schedule && schedule.weekStart !== mondayISO(new Date())) {
+    stale.style.display = "block";
+    stale.innerHTML = "<b>This plan is from the week of " + fmtDate(schedule.weekStart) + ".</b> Generate a fresh week below.";
+  } else stale.style.display = "none";
 
   // unmet warning
   if (schedule && Object.keys(schedule.unmet || {}).length) {
@@ -551,7 +715,13 @@ function renderTimeline() {
           '<div class="info"><div class="name">' + esc(g.name) + '</div><div class="dur">' +
           fmtClock(b.start) + " – " + fmtClock(b.end) + " · " + fmtDur(b.end - b.start) + '</div></div>' +
           '<span class="tick">✓</span>';
-        const toggle = () => { b.done = !b.done; store.set("lt.schedule", schedule); render(); };
+        const toggle = () => {
+          b.done = !b.done;
+          recordToggle(b.goalId, dayDate(selDay), (b.end - b.start) * (b.done ? 1 : -1));
+          store.set("lt.schedule", schedule);
+          for (const r of checkRewards()) toast("🏆 Reward unlocked: " + r.name);
+          render();
+        };
         el.addEventListener("click", toggle);
         el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
       }
@@ -575,18 +745,67 @@ function renderGoals() {
   }
   for (const g of goals) {
     const target = weeklyTarget(g);
-    const done = doneMinutes(g);
+    const done = doneMinutesThisWeek(g);
     const pct = target ? Math.min(100, Math.round(done / target * 100)) : 0;
+    const u = g.per === "day" ? "day" : "week";
+    const streakN = g.per === "day" ? dayStreak(g) : weekStreak(g);
+    const total = g.per === "day" ? totalDaysMet(g) : totalWeeksMet(g);
     const card = document.createElement("button");
     card.className = "goal-card";
     card.style.setProperty("--c", g.color);
     card.innerHTML = '<span class="swatch"></span><div class="g-info">' +
       '<div class="g-name">' + esc(g.name) + '</div>' +
-      '<div class="g-meta">' + fmtDur(g.amount) + " / " + g.per + " · " + fmtDur(done) + " done of " + fmtDur(target) + '</div>' +
-      '<div class="g-track"><i style="width:' + pct + '%"></i></div></div>' +
-      '<span class="g-pct">' + pct + "%</span>";
+      '<div class="g-meta">' + fmtDur(g.amount) + " / " + g.per + " · this week " + fmtDur(done) + " of " + fmtDur(target) + '</div>' +
+      '<div class="g-track"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="g-streak"><b>' + (streakN > 0 ? "🔥 " : "") + streakN + "-" + u + " streak</b> · followed through " + total + " " + u + (total === 1 ? "" : "s") + " total</div>" +
+      '</div><span class="g-pct">' + pct + "%</span>";
     card.addEventListener("click", () => openSheet(g.id));
     list.appendChild(card);
+  }
+}
+
+function renderRewards() {
+  const list = $("#rewardList"); list.innerHTML = "";
+  if (!rewards.length) {
+    list.innerHTML = '<div class="empty"><div class="big">No rewards yet</div>Promise yourself something for holding a streak — tie it to one goal or several.</div>';
+    return;
+  }
+  const active = rewards.filter(r => !r.achievedAt);
+  const won = rewards.filter(r => r.achievedAt).sort((a, b) => b.achievedAt - a.achievedAt);
+
+  const goalChips = r => r.goalIds.map(id => {
+    const g = goals.find(x => x.id === id);
+    return g ? '<span style="--c:' + g.color + '">' + esc(g.name) + "</span>" : "";
+  }).join("");
+
+  for (const r of active) {
+    const p = rewardProgress(r);
+    const pct = Math.min(100, Math.round(p / r.target * 100));
+    const card = document.createElement("button");
+    card.className = "reward-card";
+    card.innerHTML = '<div class="r-top"><span class="r-name">' + esc(r.name) + '</span>' +
+      '<span class="r-count">' + p + " / " + r.target + '</span></div>' +
+      '<div class="r-goals">' + goalChips(r) + '</div>' +
+      '<div class="r-track"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="r-caption">' + p + " of " + r.target + " " + r.unit + " in a row" + (r.goalIds.length > 1 ? " on every goal" : "") + '</div>';
+    card.addEventListener("click", () => openRewardSheet(r.id));
+    list.appendChild(card);
+  }
+
+  if (won.length) {
+    const h = document.createElement("h2");
+    h.textContent = "Achieved";
+    list.appendChild(h);
+    for (const r of won) {
+      const card = document.createElement("button");
+      card.className = "reward-card won";
+      card.innerHTML = '<div class="r-top"><span class="r-name">' + esc(r.name) + '</span>' +
+        '<span class="r-count">' + r.target + " " + r.unit + '</span></div>' +
+        '<div class="r-goals">' + goalChips(r) + '</div>' +
+        '<div class="r-caption">Unlocked ' + new Date(r.achievedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" }) + ' — treat yourself, then set the next one.</div>';
+      card.addEventListener("click", () => openRewardSheet(r.id));
+      list.appendChild(card);
+    }
   }
 }
 
@@ -671,11 +890,93 @@ function saveGoal() {
 function deleteGoal() {
   goals = goals.filter(g => g.id !== editingId);
   store.set("lt.goals", goals);
+  // untie from rewards; drop pending rewards left with no goals (keep achieved trophies)
+  rewards = rewards
+    .map(r => Object.assign({}, r, { goalIds: r.goalIds.filter(id => id !== editingId) }))
+    .filter(r => r.goalIds.length || r.achievedAt);
+  store.set("lt.rewards", rewards);
   if (schedule) {
     for (const day of schedule.days) day.blocks = day.blocks.filter(b => b.goalId !== editingId);
     store.set("lt.schedule", schedule);
   }
   closeSheet(); render();
+}
+
+/* ================= reward sheet ================= */
+function openRewardSheet(id, prefill) {
+  editingRewardId = id || null;
+  const r = rewards.find(x => x.id === id);
+  const achieved = !!(r && r.achievedAt);
+
+  $("#rSheetTitle").textContent = achieved ? "Achieved 🏆" : (r ? "Edit reward" : "New reward");
+  $("#rName").value = r ? r.name : "";
+  $("#rTarget").value = r ? r.target : (prefill && prefill.target) || 7;
+  $("#rUnit").value = r ? r.unit : (prefill && prefill.unit) || "days";
+  rGoalSel = r ? r.goalIds.slice() : (prefill && prefill.goalIds ? prefill.goalIds.slice() : []);
+
+  $("#rName").disabled = achieved;
+  $("#rTarget").disabled = achieved;
+  $("#rUnit").disabled = achieved;
+  $("#btnRSave").style.display = achieved ? "none" : "block";
+  $("#btnRNext").style.display = achieved ? "block" : "none";
+  $("#btnRDelete").style.display = r ? "block" : "none";
+  $("#btnRDelete").textContent = achieved ? "Remove from achieved" : "Remove reward";
+
+  renderRGoalPicks(achieved);
+  $("#rSheetWrap").classList.add("on");
+}
+
+function renderRGoalPicks(disabled) {
+  const wrap = $("#rGoalPicks"); wrap.innerHTML = "";
+  if (!goals.length) {
+    wrap.innerHTML = '<p class="hint">Add a goal first — rewards attach to goals.</p>';
+    return;
+  }
+  for (const g of goals) {
+    const b = document.createElement("button");
+    b.textContent = g.name;
+    b.style.setProperty("--c", g.color);
+    b.className = rGoalSel.includes(g.id) ? "on" : "";
+    if (disabled) b.disabled = true;
+    b.addEventListener("click", () => {
+      rGoalSel = rGoalSel.includes(g.id) ? rGoalSel.filter(x => x !== g.id) : rGoalSel.concat(g.id);
+      renderRGoalPicks(false);
+    });
+    wrap.appendChild(b);
+  }
+}
+
+function closeRewardSheet() { $("#rSheetWrap").classList.remove("on"); }
+
+function saveReward() {
+  const name = $("#rName").value.trim();
+  const target = Math.max(1, Math.round(Number($("#rTarget").value) || 0));
+  const unit = $("#rUnit").value;
+  if (!name) { toast("Name the reward"); return; }
+  if (!rGoalSel.length) { toast("Pick at least one goal"); return; }
+  if (editingRewardId) {
+    const r = rewards.find(x => x.id === editingRewardId);
+    Object.assign(r, { name, target, unit, goalIds: rGoalSel.slice() });
+  } else {
+    rewards.push({ id: Math.random().toString(36).slice(2, 9), name, target, unit, goalIds: rGoalSel.slice(), achievedAt: null });
+  }
+  store.set("lt.rewards", rewards);
+  closeRewardSheet();
+  for (const r of checkRewards()) toast("🏆 Reward unlocked: " + r.name);
+  render();
+}
+
+function deleteReward() {
+  rewards = rewards.filter(r => r.id !== editingRewardId);
+  store.set("lt.rewards", rewards);
+  closeRewardSheet(); render();
+}
+
+// "Set a follow-up reward" on an achieved reward: same goals, fresh streak target
+function nextReward() {
+  const r = rewards.find(x => x.id === editingRewardId);
+  closeRewardSheet();
+  openRewardSheet(null, r ? { goalIds: r.goalIds, target: r.target, unit: r.unit } : null);
 }
 
 /* ================= misc ui ================= */
@@ -685,18 +986,24 @@ function toast(msg) {
   t.textContent = msg;
   t.classList.add("on");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("on"), 2200);
+  toastTimer = setTimeout(() => t.classList.remove("on"), 2400);
 }
 
 function switchView(name) {
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "view-" + name));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.view === name));
-  const showChips = name === "today";
-  $("#dayChips").style.display = showChips ? "flex" : "none";
+  $("#dayChips").style.display = name === "today" ? "flex" : "none";
+  $("#scroller").scrollTop = 0;
 }
 
 /* ================= init ================= */
 function init() {
+  // migrate v1 schedules (no weekStart) to the current week
+  if (schedule && !schedule.weekStart) {
+    schedule.weekStart = mondayISO(new Date());
+    store.set("lt.schedule", schedule);
+  }
+
   render();
 
   document.querySelectorAll("nav button").forEach(b =>
@@ -705,7 +1012,7 @@ function init() {
   $("#btnGenerate").addEventListener("click", () => {
     if (!goals.length) { switchView("goals"); toast("Add a goal first"); return; }
     const r = buildSchedule(settings, goals);
-    schedule = { createdAt: Date.now(), days: r.days, unmet: r.unmet };
+    schedule = { createdAt: Date.now(), weekStart: mondayISO(new Date()), days: r.days, unmet: r.unmet };
     store.set("lt.schedule", schedule);
     render();
     toast("Week planned");
@@ -716,6 +1023,13 @@ function init() {
   $("#btnSheetSave").addEventListener("click", saveGoal);
   $("#btnSheetDelete").addEventListener("click", deleteGoal);
   $("#sheetWrap").addEventListener("click", e => { if (e.target.id === "sheetWrap") closeSheet(); });
+
+  $("#btnAddReward").addEventListener("click", () => openRewardSheet(null));
+  $("#btnRCancel").addEventListener("click", closeRewardSheet);
+  $("#btnRSave").addEventListener("click", saveReward);
+  $("#btnRDelete").addEventListener("click", deleteReward);
+  $("#btnRNext").addEventListener("click", nextReward);
+  $("#rSheetWrap").addEventListener("click", e => { if (e.target.id === "rSheetWrap") closeRewardSheet(); });
 
   const bind = (id, key) => $(id).addEventListener("change", e => { settings[key] = e.target.value; saveSettings(); renderChips(); });
   bind("#setWake", "wake"); bind("#setSleep", "sleep");

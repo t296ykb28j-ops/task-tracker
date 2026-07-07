@@ -34,8 +34,19 @@ It launches full-screen like a native app. After the first visit it also works o
 1. **Setup tab** — set wake time, sleep time, work start/end, and which days you work. Optionally a break length between scheduled sessions.
 2. **Goals tab** — add goals. Each has a time devotion (X minutes/hours, per day or per week), a max single-session length (long goals get split), and a color.
 3. **Schedule tab** — tap **Generate this week**. Daily goals land on every day; weekly goals get split into sessions and spread across the roomiest days. Tap a block to mark it done. If your goals don't fit in your free hours, a banner tells you what was left over.
+4. **Rewards tab** — promise yourself something for a streak, e.g. "New headphones — 14 days in a row on Guitar." A reward can be tied to several goals at once; then every tied goal must hold the streak. When the streak target is hit the reward moves to **Achieved**, and "Set a follow-up reward" starts the next one on the same goals.
 
-Regenerate any time — e.g. at the start of each week (regenerating resets that week's checkmarks).
+Regenerate any time — e.g. at the start of each week. Checkmarks reset with a new plan, but follow-through history is kept permanently.
+
+## How follow-through is counted
+
+Every checked-off block is logged to that calendar date. From that history the app derives, per goal:
+
+- **Followed through on a day** — a daily goal needs its full daily amount done that day; a weekly goal counts any completed session that day.
+- **Followed through on a week** — the goal's full weekly amount done within that Mon–Sun week (for daily goals that's amount × 7).
+- **Streak** — consecutive days/weeks followed through. The current day or week doesn't break a streak while it's still in progress; it just hasn't extended it yet.
+
+Goal cards show the current streak and the all-time count of days/weeks followed through. Rewards measure the *streak*: a reward set to "N days in a row" across multiple goals unlocks when the weakest tied goal reaches N.
 
 ## Notes
 
