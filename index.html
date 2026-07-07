@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Life Tracker</title>
+<meta name="description" content="Plan your week around your goals.">
+<meta name="theme-color" content="#12172B">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Life Tracker">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#12172B; --surface:#1B2140; --raise:#222A52; --line:#2A3154;
+  --ink:#EEF0F8; --dim:#8B94BB; --faint:#5A6390;
+  --dawn:#FFC466; --dawn-ink:#241A05;
+  --work:#3A4266;
+  --rail:2px;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --disp:'Bricolage Grotesque',system-ui,sans-serif;
+  --body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--body);
+  font-size:15px; line-height:1.45; min-height:100dvh;
+  padding-bottom:calc(76px + env(safe-area-inset-bottom));
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select{font:inherit}
+
+/* ---------- header ---------- */
+header{
+  padding:calc(14px + env(safe-area-inset-top)) 18px 6px;
+  display:flex;align-items:baseline;justify-content:space-between;
+}
+h1{font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:-.02em;margin:0}
+#weekLabel{font-family:var(--mono);font-size:11px;color:var(--dim)}
+
+/* ---------- day chips ---------- */
+#dayChips{display:flex;gap:6px;padding:8px 14px 12px;overflow-x:auto;scrollbar-width:none}
+#dayChips::-webkit-scrollbar{display:none}
+.chip{
+  flex:1;min-width:42px;padding:8px 0 7px;border-radius:12px;text-align:center;
+  background:var(--surface);border:1px solid transparent;color:var(--dim);
+}
+.chip .dow{font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+.chip .dnum{font-family:var(--disp);font-weight:700;font-size:16px;color:var(--ink);margin:1px 0 5px}
+.chip .load{height:3px;border-radius:2px;background:var(--line);margin:0 9px;overflow:hidden}
+.chip .load i{display:block;height:100%;background:var(--dawn);border-radius:2px}
+.chip.sel{border-color:var(--dawn);background:var(--raise)}
+.chip.today .dow{color:var(--dawn)}
+
+/* ---------- views ---------- */
+main{padding:0 18px}
+.view{display:none}
+.view.on{display:block}
+.banner{
+  background:var(--raise);border:1px solid var(--line);border-radius:12px;
+  padding:10px 12px;font-size:13px;color:var(--dim);margin:0 0 14px;
+}
+.banner b{color:var(--ink);font-weight:600}
+
+/* ---------- day rail timeline ---------- */
+#timeline{position:relative;padding-left:70px;margin-top:4px}
+#timeline::before{
+  content:"";position:absolute;left:58px;top:10px;bottom:10px;width:var(--rail);
+  background:linear-gradient(var(--dawn),var(--faint) 30%,var(--faint) 70%,#9FB4FF);
+  border-radius:2px;opacity:.55;
+}
+.tl-mark{position:relative;display:flex;align-items:center;gap:10px;padding:2px 0;color:var(--dim);font-size:12px;min-height:26px}
+.tl-mark .t{font-family:var(--mono);font-size:11px;width:52px;margin-left:-70px;text-align:right;padding-right:14px;color:var(--faint)}
+.tl-mark .dot{position:absolute;left:-13px;width:8px;height:8px;border-radius:50%;background:var(--dawn)}
+.tl-mark.moon .dot{background:#9FB4FF}
+.tl-block{
+  position:relative;display:flex;align-items:center;gap:10px;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:11px 12px;margin:6px 0;
+}
+.tl-block::before{content:"";position:absolute;left:-13px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--c,var(--dim))}
+.tl-block .t{font-family:var(--mono);font-size:11px;color:var(--faint);width:52px;margin-left:-70px;text-align:right;padding-right:14px;flex:none;align-self:flex-start;padding-top:3px}
+.tl-block .bar{width:4px;align-self:stretch;border-radius:3px;background:var(--c,var(--dim));flex:none}
+.tl-block .info{flex:1;min-width:0}
+.tl-block .name{font-weight:600;font-size:14px}
+.tl-block .dur{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:1px}
+.tl-block .tick{
+  flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;color:transparent;font-size:14px;
+  transition:transform .15s ease;
+}
+.tl-block.done{opacity:.55}
+.tl-block.done .name{text-decoration:line-through}
+.tl-block.done .tick{background:var(--c);border-color:var(--c);color:#101425;transform:scale(1.05)}
+.tl-block.work{background:repeating-linear-gradient(-45deg,var(--surface) 0 7px,#1E2547 7px 14px);border-style:dashed}
+.tl-block.work .name{color:var(--dim);font-weight:500}
+
+#daySummary{font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center;padding:14px 0 4px}
+
+.cta{
+  display:block;width:100%;margin:14px 0 8px;padding:14px;border-radius:14px;
+  background:var(--dawn);color:var(--dawn-ink);font-family:var(--disp);
+  font-weight:700;font-size:15px;letter-spacing:.01em;
+  transition:transform .12s ease;
+}
+.cta:active{transform:scale(.98)}
+.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+
+.empty{padding:44px 10px;text-align:center;color:var(--dim)}
+.empty .big{font-family:var(--disp);font-weight:700;font-size:17px;color:var(--ink);margin-bottom:6px}
+
+/* ---------- goals ---------- */
+.goal-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:13px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+}
+.goal-card .swatch{flex:none;width:12px;height:12px;border-radius:4px;background:var(--c)}
+.goal-card .g-info{flex:1;min-width:0}
+.goal-card .g-name{font-weight:600;font-size:14px}
+.goal-card .g-meta{font-family:var(--mono);font-size:11px;color:var(--dim);margin:2px 0 7px}
+.goal-card .g-track{height:4px;border-radius:3px;background:var(--line);overflow:hidden}
+.goal-card .g-track i{display:block;height:100%;background:var(--c);border-radius:3px}
+.goal-card .g-pct{font-family:var(--mono);font-size:11px;color:var(--dim);flex:none}
+
+/* ---------- setup ---------- */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px}
+.field input[type=time],.field input[type=text],.field input[type=number],.field select{
+  width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);font-family:var(--mono);font-size:15px;
+  appearance:none;-webkit-appearance:none;
+}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1.1fr .9fr 1fr;gap:8px}
+.daytoggles{display:flex;gap:6px}
+.daytoggles button{
+  flex:1;padding:10px 0;border-radius:10px;background:var(--surface);
+  border:1px solid var(--line);color:var(--dim);font-family:var(--mono);font-size:12px;
+}
+.daytoggles button.on{background:var(--dawn);border-color:var(--dawn);color:var(--dawn-ink);font-weight:600}
+.hint{font-size:12px;color:var(--faint);margin-top:6px}
+h2{font-family:var(--disp);font-weight:700;font-size:16px;margin:18px 0 12px}
+
+/* ---------- bottom nav ---------- */
+nav{
+  position:fixed;left:0;right:0;bottom:0;display:flex;
+  background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  padding:6px 10px calc(6px + env(safe-area-inset-bottom));
+}
+nav button{flex:1;padding:9px 0 7px;color:var(--faint);font-size:11px;border-radius:12px}
+nav button .ic{display:block;font-size:18px;line-height:1;margin-bottom:3px}
+nav button.on{color:var(--dawn)}
+
+/* ---------- sheet ---------- */
+#sheetWrap{position:fixed;inset:0;background:rgba(6,8,18,.6);display:none;z-index:30}
+#sheetWrap.on{display:block}
+#sheet{
+  position:absolute;left:0;right:0;bottom:0;background:var(--raise);
+  border-radius:20px 20px 0 0;padding:18px 18px calc(20px + env(safe-area-inset-bottom));
+  max-height:88dvh;overflow-y:auto;
+  animation:up .22s ease;
+}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+#sheet h2{margin-top:2px}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatches button{width:32px;height:32px;border-radius:10px;background:var(--c);border:2px solid transparent}
+.swatches button.on{border-color:var(--ink)}
+.sheet-actions{display:flex;gap:10px;margin-top:6px}
+.sheet-actions .cta{margin:8px 0 0}
+.danger{color:#FF8A80;text-align:center;width:100%;padding:12px;font-size:13px}
+
+#toast{
+  position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);
+  background:var(--raise);border:1px solid var(--line);color:var(--ink);
+  padding:9px 16px;border-radius:99px;font-size:13px;opacity:0;pointer-events:none;
+  transition:opacity .2s ease,transform .2s ease;z-index:40;white-space:nowrap;
+}
+#toast.on{opacity:1;transform:translateX(-50%)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:focus-visible{outline:2px solid var(--dawn);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Life Tracker</h1>
+  <span id="weekLabel"></span>
+</header>
+
+<div id="dayChips"></div>
+
+<main>
+  <!-- TODAY / SCHEDULE -->
+  <section id="view-today" class="view on">
+    <div id="unmetBanner" class="banner" style="display:none"></div>
+    <div id="timeline"></div>
+    <div id="daySummary"></div>
+    <button class="cta" id="btnGenerate">Generate this week</button>
+  </section>
+
+  <!-- GOALS -->
+  <section id="view-goals" class="view">
+    <div id="goalList"></div>
+    <button class="cta ghost" id="btnAddGoal">+ New goal</button>
+  </section>
+
+  <!-- SETUP -->
+  <section id="view-setup" class="view">
+    <h2>Your day</h2>
+    <div class="row2">
+      <div class="field"><label for="setWake">Wake up</label><input type="time" id="setWake"></div>
+      <div class="field"><label for="setSleep">Sleep</label><input type="time" id="setSleep"></div>
+    </div>
+    <h2>Work</h2>
+    <div class="row2">
+      <div class="field"><label for="setWorkStart">Starts</label><input type="time" id="setWorkStart"></div>
+      <div class="field"><label for="setWorkEnd">Ends</label><input type="time" id="setWorkEnd"></div>
+    </div>
+    <div class="field">
+      <label>Work days</label>
+      <div class="daytoggles" id="workDayToggles"></div>
+    </div>
+    <h2>Scheduling</h2>
+    <div class="field">
+      <label for="setBuffer">Break between sessions</label>
+      <select id="setBuffer">
+        <option value="0">None</option><option value="10">10 min</option>
+        <option value="15">15 min</option><option value="30">30 min</option>
+      </select>
+      <p class="hint">Changes apply the next time you generate the week.</p>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button data-view="today" class="on"><span class="ic">◔</span>Schedule</button>
+  <button data-view="goals"><span class="ic">◎</span>Goals</button>
+  <button data-view="setup"><span class="ic">☼</span>Setup</button>
+</nav>
+
+<!-- GOAL SHEET -->
+<div id="sheetWrap">
+  <div id="sheet">
+    <h2 id="sheetTitle">New goal</h2>
+    <div class="field"><label for="gName">Name</label><input type="text" id="gName" placeholder="e.g. Guitar" autocomplete="off"></div>
+    <div class="field">
+      <label>Time devotion</label>
+      <div class="row3">
+        <input type="number" id="gAmount" min="0.25" step="0.25" inputmode="decimal">
+        <select id="gUnit"><option value="h">hours</option><option value="m">minutes</option></select>
+        <select id="gPer"><option value="day">per day</option><option value="week">per week</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="gSession">Longest single session</label>
+      <select id="gSession">
+        <option value="30">30 min</option><option value="45">45 min</option>
+        <option value="60">1 hour</option><option value="90">1.5 hours</option>
+        <option value="120">2 hours</option><option value="180">3 hours</option>
+        <option value="0">No limit</option>
+      </select>
+      <p class="hint">Bigger goals get split into sessions of at most this length.</p>
+    </div>
+    <div class="field"><label>Color</label><div class="swatches" id="gSwatches"></div></div>
+    <div class="sheet-actions">
+      <button class="cta ghost" id="btnSheetCancel">Cancel</button>
+      <button class="cta" id="btnSheetSave">Save goal</button>
+    </div>
+    <button class="danger" id="btnSheetDelete" style="display:none">Delete goal</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ================= storage (falls back to memory if unavailable) ================= */
+const store = (() => {
+  const mem = {};
+  let ok = false;
+  try { localStorage.setItem("__lt", "1"); localStorage.removeItem("__lt"); ok = true; } catch (e) { ok = false; }
+  return {
+    get(k, fb) {
+      try { if (ok) { const v = localStorage.getItem(k); if (v !== null) return JSON.parse(v); } } catch (e) {}
+      return (k in mem) ? mem[k] : fb;
+    },
+    set(k, v) {
+      mem[k] = v;
+      try { if (ok) localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
+    }
+  };
+})();
+
+/* ================= state ================= */
+const PALETTE = ["#FF7A6B","#5FD4A2","#6BB8FF","#B79CFF","#FF8FB1","#4FD8CE","#B8E05C","#FF9D5C"];
+const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+let settings = store.get("lt.settings", {
+  wake: "06:30", sleep: "22:30",
+  workStart: "09:00", workEnd: "17:00",
+  workDays: [0,1,2,3,4],           // Mon-based: 0=Mon … 6=Sun
+  buffer: 15
+});
+let goals = store.get("lt.goals", []);
+let schedule = store.get("lt.schedule", null);
+
+let selDay = mondayIndex(new Date());
+let editingId = null;
+let pickedColor = PALETTE[0];
+
+/* ================= time helpers ================= */
+function mondayIndex(d) { return (d.getDay() + 6) % 7; }
+function toMin(hhmm) { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; }
+function fmtClock(min) {
+  let m = min % 1440; if (m < 0) m += 1440;
+  let h = Math.floor(m / 60), mm = m % 60;
+  const ap = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return h + ":" + String(mm).padStart(2, "0") + " " + ap;
+}
+function fmtDur(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  if (h && m) return h + "h " + m + "m";
+  if (h) return h + "h";
+  return m + "m";
+}
+
+/* ================= scheduler (pure) ================= */
+function subtractInterval(ivs, cut) {
+  const out = [];
+  for (const [s, e] of ivs) {
+    if (cut[1] <= s || cut[0] >= e) { out.push([s, e]); continue; }
+    if (cut[0] > s) out.push([s, cut[0]]);
+    if (cut[1] < e) out.push([cut[1], e]);
+  }
+  return out;
+}
+
+function buildSchedule(settings, goals) {
+  const wake = toMin(settings.wake);
+  let dayEnd = toMin(settings.sleep);
+  if (dayEnd <= wake) dayEnd += 1440;            // sleep past midnight
+
+  const buffer = Number(settings.buffer) || 0;
+  const free = [], days = [], unmet = {};
+
+  for (let d = 0; d < 7; d++) {
+    let ivs = [[wake, dayEnd]];
+    if (settings.workDays.includes(d)) {
+      const ws = toMin(settings.workStart), we = toMin(settings.workEnd);
+      if (we > ws) ivs = subtractInterval(ivs, [Math.max(ws, wake), Math.min(we, dayEnd)]);
+    }
+    free.push(ivs);
+    days.push({ blocks: [] });
+  }
+
+  const uid = () => Math.random().toString(36).slice(2, 9);
+
+  function place(d, goal, len) {
+    // pick the roomiest interval that fits, so sessions spread between morning and evening
+    let bi = -1, best = -1;
+    for (let i = 0; i < free[d].length; i++) {
+      const L = free[d][i][1] - free[d][i][0];
+      if (L >= len && L > best) { best = L; bi = i; }
+    }
+    if (bi < 0) return false;
+    const [s, e] = free[d][bi];
+    days[d].blocks.push({ id: uid(), goalId: goal.id, start: s, end: s + len, done: false });
+    const ns = Math.min(e, s + len + buffer);
+    if (ns < e) free[d][bi] = [ns, e]; else free[d].splice(bi, 1);
+    return true;
+  }
+
+  const freeTotal = d => free[d].reduce((a, iv) => a + iv[1] - iv[0], 0);
+  const sessionLen = (g, fb) => {
+    const s = Number(g.session) || 0;
+    return Math.max(15, Math.min(s > 0 ? s : fb, g.amount));
+  };
+
+  // daily goals first (rigid), biggest first
+  for (const g of goals.filter(g => g.per === "day" && g.amount > 0).sort((a, b) => b.amount - a.amount)) {
+    const sess = sessionLen(g, g.amount);
+    for (let d = 0; d < 7; d++) {
+      let rem = g.amount, guard = 200;
+      while (rem > 0 && guard-- > 0) {
+        const len = Math.min(sess, rem);
+        if (!place(d, g, len)) { unmet[g.id] = (unmet[g.id] || 0) + rem; break; }
+        rem -= len;
+      }
+    }
+  }
+
+  // weekly goals: split into sessions, spread across the roomiest days,
+  // preferring days that don't already contain this goal
+  for (const g of goals.filter(g => g.per === "week" && g.amount > 0).sort((a, b) => b.amount - a.amount)) {
+    const sess = sessionLen(g, 60);
+    let rem = g.amount, guard = 400;
+    while (rem > 0 && guard-- > 0) {
+      const len = Math.min(sess, rem);
+      let bd = -1, best = -1, bdRepeat = -1, bestRepeat = -1;
+      for (let d = 0; d < 7; d++) {
+        if (!free[d].some(iv => iv[1] - iv[0] >= len)) continue;
+        const tot = freeTotal(d);
+        const has = days[d].blocks.some(b => b.goalId === g.id);
+        if (!has) { if (tot > best) { best = tot; bd = d; } }
+        else { if (tot > bestRepeat) { bestRepeat = tot; bdRepeat = d; } }
+      }
+      const target = bd >= 0 ? bd : bdRepeat;
+      if (target < 0) { unmet[g.id] = (unmet[g.id] || 0) + rem; break; }
+      place(target, g, len);
+      rem -= len;
+    }
+  }
+
+  days.forEach(day => day.blocks.sort((a, b) => a.start - b.start));
+  return { days, unmet, wake, dayEnd };
+}
+
+/* ================= derived ================= */
+function weeklyTarget(g) { return g.per === "day" ? g.amount * 7 : g.amount; }
+function doneMinutes(g) {
+  if (!schedule) return 0;
+  let t = 0;
+  for (const day of schedule.days)
+    for (const b of day.blocks)
+      if (b.goalId === g.id && b.done) t += b.end - b.start;
+  return t;
+}
+function dayCapacity() {
+  const wake = toMin(settings.wake);
+  let end = toMin(settings.sleep); if (end <= wake) end += 1440;
+  return { wake, end };
+}
+
+/* ================= rendering ================= */
+const $ = s => document.querySelector(s);
+
+function mondayOf(d) { const x = new Date(d); x.setDate(x.getDate() - mondayIndex(x)); return x; }
+
+function render() {
+  renderHeader(); renderChips(); renderTimeline(); renderGoals(); renderSetup();
+}
+
+function renderHeader() {
+  const mon = mondayOf(new Date());
+  const sun = new Date(mon); sun.setDate(sun.getDate() + 6);
+  const f = d => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  $("#weekLabel").textContent = f(mon) + " – " + f(sun);
+}
+
+function renderChips() {
+  const wrap = $("#dayChips"); wrap.innerHTML = "";
+  const mon = mondayOf(new Date());
+  const today = mondayIndex(new Date());
+  const { wake, end } = dayCapacity();
+
+  for (let d = 0; d < 7; d++) {
+    const date = new Date(mon); date.setDate(date.getDate() + d);
+    const cap = Math.max(1, (end - wake) - workLen(d));
+    let sched = 0;
+    if (schedule) for (const b of schedule.days[d].blocks) sched += b.end - b.start;
+    const pct = Math.min(100, Math.round(sched / cap * 100));
+
+    const c = document.createElement("button");
+    c.className = "chip" + (d === selDay ? " sel" : "") + (d === today ? " today" : "");
+    c.innerHTML = '<span class="dow">' + DOW[d] + '</span><span class="dnum">' + date.getDate() +
+                  '</span><span class="load"><i style="width:' + pct + '%"></i></span>';
+    c.addEventListener("click", () => { selDay = d; render(); });
+    wrap.appendChild(c);
+  }
+}
+
+function workLen(d) {
+  if (!settings.workDays.includes(d)) return 0;
+  const ws = toMin(settings.workStart), we = toMin(settings.workEnd);
+  const { wake, end } = dayCapacity();
+  return Math.max(0, Math.min(we, end) - Math.max(ws, wake));
+}
+
+function renderTimeline() {
+  const tl = $("#timeline"); tl.innerHTML = "";
+  const banner = $("#unmetBanner");
+
+  // unmet warning
+  if (schedule && Object.keys(schedule.unmet || {}).length) {
+    const parts = Object.entries(schedule.unmet).map(([id, m]) => {
+      const g = goals.find(x => x.id === id);
+      return (g ? g.name : "a goal") + " (" + fmtDur(m) + ")";
+    });
+    banner.style.display = "block";
+    banner.innerHTML = "<b>Couldn't fit everything.</b> Left over: " + parts.join(", ") +
+      ". Shorten goals or widen your free hours in Setup.";
+  } else banner.style.display = "none";
+
+  if (!goals.length) {
+    tl.innerHTML = '<div class="empty"><div class="big">No goals yet</div>Add a few goals, then generate your week.</div>';
+    $("#daySummary").textContent = "";
+    return;
+  }
+  if (!schedule) {
+    tl.innerHTML = '<div class="empty"><div class="big">No schedule yet</div>Tap the button below to plan your week around ' + goals.length + ' goal' + (goals.length > 1 ? "s" : "") + '.</div>';
+    $("#daySummary").textContent = "";
+    return;
+  }
+
+  const { wake, end } = dayCapacity();
+  const items = [];
+  items.push({ kind: "mark", cls: "", t: wake, label: "wake up" });
+
+  // merge goal blocks + work pseudo-block, in time order
+  const blocks = schedule.days[selDay].blocks.slice();
+  if (settings.workDays.includes(selDay)) {
+    const ws = Math.max(toMin(settings.workStart), wake), we = Math.min(toMin(settings.workEnd), end);
+    if (we > ws) blocks.push({ id: "work", work: true, start: ws, end: we });
+  }
+  blocks.sort((a, b) => a.start - b.start);
+  for (const b of blocks) items.push({ kind: "block", b });
+
+  items.push({ kind: "mark", cls: "moon", t: end, label: "sleep" });
+
+  for (const it of items) {
+    if (it.kind === "mark") {
+      const el = document.createElement("div");
+      el.className = "tl-mark " + it.cls;
+      el.innerHTML = '<span class="t">' + fmtClock(it.t) + '</span><span class="dot"></span>' + it.label;
+      tl.appendChild(el);
+    } else {
+      const b = it.b;
+      const el = document.createElement("div");
+      if (b.work) {
+        el.className = "tl-block work";
+        el.innerHTML = '<span class="t">' + fmtClock(b.start) + '</span><span class="bar" style="background:var(--work)"></span>' +
+          '<div class="info"><div class="name">Work</div><div class="dur">' + fmtClock(b.start) + " – " + fmtClock(b.end) + '</div></div>';
+      } else {
+        const g = goals.find(x => x.id === b.goalId) || { name: "Goal", color: "#888" };
+        el.className = "tl-block" + (b.done ? " done" : "");
+        el.style.setProperty("--c", g.color);
+        el.setAttribute("role", "button");
+        el.setAttribute("tabindex", "0");
+        el.innerHTML = '<span class="t">' + fmtClock(b.start) + '</span><span class="bar"></span>' +
+          '<div class="info"><div class="name">' + esc(g.name) + '</div><div class="dur">' +
+          fmtClock(b.start) + " – " + fmtClock(b.end) + " · " + fmtDur(b.end - b.start) + '</div></div>' +
+          '<span class="tick">✓</span>';
+        const toggle = () => { b.done = !b.done; store.set("lt.schedule", schedule); render(); };
+        el.addEventListener("click", toggle);
+        el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+      }
+      tl.appendChild(el);
+    }
+  }
+
+  const cap = (end - wake) - workLen(selDay);
+  let sched = 0;
+  for (const b of schedule.days[selDay].blocks) sched += b.end - b.start;
+  $("#daySummary").textContent = "goals " + fmtDur(sched) + "  ·  free " + fmtDur(Math.max(0, cap - sched));
+}
+
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+function renderGoals() {
+  const list = $("#goalList"); list.innerHTML = "";
+  if (!goals.length) {
+    list.innerHTML = '<div class="empty"><div class="big">Nothing here yet</div>A goal is anything you want time for — reading, running, a side project.</div>';
+    return;
+  }
+  for (const g of goals) {
+    const target = weeklyTarget(g);
+    const done = doneMinutes(g);
+    const pct = target ? Math.min(100, Math.round(done / target * 100)) : 0;
+    const card = document.createElement("button");
+    card.className = "goal-card";
+    card.style.setProperty("--c", g.color);
+    card.innerHTML = '<span class="swatch"></span><div class="g-info">' +
+      '<div class="g-name">' + esc(g.name) + '</div>' +
+      '<div class="g-meta">' + fmtDur(g.amount) + " / " + g.per + " · " + fmtDur(done) + " done of " + fmtDur(target) + '</div>' +
+      '<div class="g-track"><i style="width:' + pct + '%"></i></div></div>' +
+      '<span class="g-pct">' + pct + "%</span>";
+    card.addEventListener("click", () => openSheet(g.id));
+    list.appendChild(card);
+  }
+}
+
+function renderSetup() {
+  $("#setWake").value = settings.wake;
+  $("#setSleep").value = settings.sleep;
+  $("#setWorkStart").value = settings.workStart;
+  $("#setWorkEnd").value = settings.workEnd;
+  $("#setBuffer").value = String(settings.buffer);
+  const wrap = $("#workDayToggles"); wrap.innerHTML = "";
+  for (let d = 0; d < 7; d++) {
+    const b = document.createElement("button");
+    b.textContent = DOW[d][0];
+    b.setAttribute("aria-label", DOW[d]);
+    b.className = settings.workDays.includes(d) ? "on" : "";
+    b.addEventListener("click", () => {
+      settings.workDays = settings.workDays.includes(d)
+        ? settings.workDays.filter(x => x !== d)
+        : settings.workDays.concat(d).sort();
+      saveSettings();
+      renderSetup(); renderChips();
+    });
+    wrap.appendChild(b);
+  }
+}
+
+function saveSettings() {
+  store.set("lt.settings", settings);
+  if (schedule) toast("Regenerate to apply changes");
+}
+
+/* ================= goal sheet ================= */
+function openSheet(id) {
+  editingId = id || null;
+  const g = goals.find(x => x.id === id);
+  $("#sheetTitle").textContent = g ? "Edit goal" : "New goal";
+  $("#btnSheetDelete").style.display = g ? "block" : "none";
+  $("#gName").value = g ? g.name : "";
+  const amount = g ? g.amount : 60;
+  if (amount % 60 === 0) { $("#gAmount").value = amount / 60; $("#gUnit").value = "h"; }
+  else { $("#gAmount").value = amount; $("#gUnit").value = "m"; }
+  $("#gPer").value = g ? g.per : "day";
+  $("#gSession").value = g ? String(g.session || 0) : "60";
+  pickedColor = g ? g.color : PALETTE[goals.length % PALETTE.length];
+  renderSwatches();
+  $("#sheetWrap").classList.add("on");
+}
+
+function renderSwatches() {
+  const wrap = $("#gSwatches"); wrap.innerHTML = "";
+  for (const c of PALETTE) {
+    const b = document.createElement("button");
+    b.style.setProperty("--c", c);
+    b.className = c === pickedColor ? "on" : "";
+    b.setAttribute("aria-label", "color " + c);
+    b.addEventListener("click", () => { pickedColor = c; renderSwatches(); });
+    wrap.appendChild(b);
+  }
+}
+
+function closeSheet() { $("#sheetWrap").classList.remove("on"); }
+
+function saveGoal() {
+  const name = $("#gName").value.trim() || "Goal";
+  const val = parseFloat($("#gAmount").value);
+  if (!val || val <= 0) { toast("Set an amount of time"); return; }
+  const amount = Math.round($("#gUnit").value === "h" ? val * 60 : val);
+  const per = $("#gPer").value;
+  const session = Number($("#gSession").value);
+  if (editingId) {
+    const g = goals.find(x => x.id === editingId);
+    Object.assign(g, { name, amount, per, session, color: pickedColor });
+  } else {
+    goals.push({ id: Math.random().toString(36).slice(2, 9), name, amount, per, session, color: pickedColor });
+  }
+  store.set("lt.goals", goals);
+  closeSheet();
+  if (schedule) toast("Regenerate to fit " + name);
+  render();
+}
+
+function deleteGoal() {
+  goals = goals.filter(g => g.id !== editingId);
+  store.set("lt.goals", goals);
+  if (schedule) {
+    for (const day of schedule.days) day.blocks = day.blocks.filter(b => b.goalId !== editingId);
+    store.set("lt.schedule", schedule);
+  }
+  closeSheet(); render();
+}
+
+/* ================= misc ui ================= */
+let toastTimer = null;
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("on"), 2200);
+}
+
+function switchView(name) {
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "view-" + name));
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.view === name));
+  const showChips = name === "today";
+  $("#dayChips").style.display = showChips ? "flex" : "none";
+}
+
+/* ================= init ================= */
+function init() {
+  render();
+
+  document.querySelectorAll("nav button").forEach(b =>
+    b.addEventListener("click", () => switchView(b.dataset.view)));
+
+  $("#btnGenerate").addEventListener("click", () => {
+    if (!goals.length) { switchView("goals"); toast("Add a goal first"); return; }
+    const r = buildSchedule(settings, goals);
+    schedule = { createdAt: Date.now(), days: r.days, unmet: r.unmet };
+    store.set("lt.schedule", schedule);
+    render();
+    toast("Week planned");
+  });
+
+  $("#btnAddGoal").addEventListener("click", () => openSheet(null));
+  $("#btnSheetCancel").addEventListener("click", closeSheet);
+  $("#btnSheetSave").addEventListener("click", saveGoal);
+  $("#btnSheetDelete").addEventListener("click", deleteGoal);
+  $("#sheetWrap").addEventListener("click", e => { if (e.target.id === "sheetWrap") closeSheet(); });
+
+  const bind = (id, key) => $(id).addEventListener("change", e => { settings[key] = e.target.value; saveSettings(); renderChips(); });
+  bind("#setWake", "wake"); bind("#setSleep", "sleep");
+  bind("#setWorkStart", "workStart"); bind("#setWorkEnd", "workEnd");
+  $("#setBuffer").addEventListener("change", e => { settings.buffer = Number(e.target.value); saveSettings(); });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+  }
+}
+
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+}
+</script>
+</body>
+</html>
