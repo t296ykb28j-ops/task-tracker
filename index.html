@@ -28,10 +28,18 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;padding:0}
+html{overflow:hidden}   /* propagates to the viewport: no document scroll/bounce, only #scroller moves */
 body{
   background:var(--bg); color:var(--ink); font-family:var(--body);
   font-size:15px; line-height:1.45;
   display:flex; flex-direction:column; overflow:hidden;   /* app shell: only #scroller scrolls */
+  height:100dvh;          /* in-browser: follows Safari's collapsing toolbar exactly */
+}
+/* Installed to the home screen: with a translucent status bar, iOS sizes the layout
+   viewport short by the status-bar height, so 100%/100dvh leave a gap at the bottom.
+   vh units span the real screen in standalone (no dynamic toolbars there). */
+@media (display-mode: standalone){
+  body{height:100vh}
 }
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input,select{font:inherit}
